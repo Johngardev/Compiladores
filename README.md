@@ -97,5 +97,11 @@ El script ejecuta dos pruebas automáticamente: una con código semánticamente 
 **Conclusión**
 Se ha desarrollado con éxito un analizador semántico funcional para un subconjunto del lenguaje C. El sistema valida eficazmente las declaraciones de variables, la compatibilidad de tipos en asignaciones y la correcta utilización de ámbitos, sentando una base sólida para las fases posteriores de un compilador, como la generación de código intermedio.
 
-
+**Trabajo Futuro**
+El proyecto puede ser extendido para incluir características más avanzadas del lenguaje C:
+   - Soporte para más tipos de datos (`char`, `void`).
+   - Implementación de declaraciones y llamadas a **funciones**, incluyendo la validación de parámetros.
+   - Análisis semántico para estructuras de control (`if-else`, `while`, `for`).
+   - Soporte para **arreglos** y **punteros**.
+   - Generación de **código intermedio** (ej. código de tres direcciones) como siguiente paso hacia un compilador completo.
    
