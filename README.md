@@ -1,5 +1,5 @@
 # Analizador Semántico para un Lenguaje tipo C con PLY
-   ## Autor: Jhon A. Garcia
+
 El objetivo de este proyecto es el diseño, desarrollo e implementación de un **analizador semántico** para un subconjunto del lenguaje de programación C. Este analizador se integra con un analizador léxico y sintáctico previamente construido, formando las primeras fases de un compilador funcional. El sistema es capaz de validar la correctitud semántica del código fuente, incluyendo la gestión de variables, la comprobación de tipos y el manejo de ámbitos (scopes).
 
 ### Herramientas y lenguajes
