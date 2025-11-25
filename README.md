@@ -63,6 +63,39 @@ Este módulo define la gramática del lenguaje y, lo más importante, integra la
              - En reglas que usan variables (como `p_assignment` o `p_factor_id`), se llama a `symbol_table.lookup()` para verificar que la variable haya sido declarada.
              - Una vez obtenido el tipo de las variables, se realizan las comprobaciones de compatibilidad. Por ejemplo, en `p_assignment`, se verifica que el tipo de la expresión a la derecha sea compatible con el tipo de la variable a la izquierda.
 
+## Módulo de Generacion de Código Intermedio (3AC)
+   1. La última fase implementada en el compilador es la generacion de Código de Tres Direcciones (Three-Address Code o 3AC). Esta es una representación intermedia del cídgo fuente que linealiza las estructuras    jerárquicas (árboles de expresiones) en una secuencia de instrucciones simples.
+      
+   El objetivo es transformar expresiones complejas como `x = a + b * c` en una serie de pasos atómicos que una maquina pueda procesar fácilmente.
+   2. Arquitectura del componente se desarrollo un móulo dedicado (`code_gen.py`) que trabaja en conjunto con el analizador sintáctico.
+      - Clase `CodeGenerator`: Actúa como un buffer de instrucciones.
+         - Gestión de Temporales (`new_temp`): Genera variables automáticas secuenciales (`t0`, `t1`, `t2`...) para almacenar resultados parciales de operaciones aritmémticas.
+         - Emision de Inatrucciones (`emit`): Almacena las operaciones en formato "cuádruplos":`operador, operando1, operando2, destino `.
+         
+   3. Estrategia de Traducci+on se utiliza un Traducción Dirigida por la Sintaxis. A medida qu el parser reduce las reglas gramaticales, se ejecutan las siguientes acciones:
+      1. Atributos Sintetizados: La variable `p[0]` de PLY ahora transporta un diccionario con dos metadatos:
+            - `type`: El tipo de dato (para validación semántica).
+            - `place`: El nombre de la variable o temporal donde reside el valor (para generación de código).
+      2. Descomposición de Expresiones:
+            - Al encontrar una operación (ej. suma), se solicitan los lugares (`place`) de los operandos izquierdo y derecho.
+            - Se genera un nuevo temporal (ej. `t5`).
+            - Se emite la instrucción `t5 = lugar_izq + lugar_der`.
+
+   4. Ejemplo de Transformación
+      Código fuente (Entrada)
+      ```
+       val = 10 + 20 * 3;
+       ```
+      Lógica del Generador:
+         1. Parser detecta `20 * 3`. Genera `t0`. Emite `t0 = 20 * 3`.
+         2. Parser detecta `10 + t0`. Genera `t1`. Emite `t1 = 10 + t0`.
+         3. Parser detecta asignacion a `val`. Emite `val = t1`
+      Código Intermedio Generado (Salida):
+       ```
+       t0 = 20 * 3
+       t1 = 10 + t0
+       val = t1
+       ```
 
 ## Guía de Uso y Pruebas
 **Requisitos e Instalación**
@@ -92,6 +125,7 @@ El script ejecuta dos pruebas automáticamente: una con código semánticamente 
      Esto demuestra que el analizador semántico es capaz de identificar errores de ámbito correctamente.
 
 
+
 ## Conclusiones y Posibles Mejoras
 
 **Conclusión**
@@ -103,5 +137,4 @@ El proyecto puede ser extendido para incluir características más avanzadas del
    - Implementación de declaraciones y llamadas a **funciones**, incluyendo la validación de parámetros.
    - Análisis semántico para estructuras de control (`if-else`, `while`, `for`).
    - Soporte para **arreglos** y **punteros**.
-   - Generación de **código intermedio** (ej. código de tres direcciones) como siguiente paso hacia un compilador completo.
    
