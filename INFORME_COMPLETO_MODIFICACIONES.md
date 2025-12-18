@@ -1144,8 +1144,6 @@ Para continuar mejorando el compilador:
 4. **code_gen.py** - Generador de código intermedio (sin cambios)
 5. **test_codigo_profesor.py** - Suite de pruebas (nuevo)
 6. **MODIFICACIONES_REALIZADAS.md** - Documentación técnica detallada
-7. **RESUMEN_PROFESOR.md** - Resumen ejecutivo
-8. **CHECKLIST_CODIGO_PROFESOR.md** - Lista de verificación
 
 ### 8.2 Líneas de Código Modificadas
 
@@ -1200,7 +1198,7 @@ Analysis sintactic and semantic completed successfully.
 
 ## Firma y Validación
 
-**Desarrollador:** [Tu nombre]  
+**Desarrolladores:** Juan Jose Vanegas - Jhon A. Garcia 
 **Fecha:** 18 de Diciembre, 2025  
 **Estado:** Completado y validado  
 **Versión del compilador:** 2.0 (C Extended)
