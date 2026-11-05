@@ -1,140 +1,173 @@
-# Analizador Semántico para un Lenguaje tipo C con PLY
+<div align="center">
 
-El objetivo de este proyecto es el diseño, desarrollo e implementación de un **analizador semántico** para un subconjunto del lenguaje de programación C. Este analizador se integra con un analizador léxico y sintáctico previamente construido, formando las primeras fases de un compilador funcional. El sistema es capaz de validar la correctitud semántica del código fuente, incluyendo la gestión de variables, la comprobación de tipos y el manejo de ámbitos (scopes).
+# Compiladores
 
-### Herramientas y lenguajes
-   -   Lenguaje de implementacion: Python 3.
-   -   Libreria principal: PLY (Python Lex-Yacc), una biblioteca fundamental para la construccion de analizadores lexicos y sintacticos en Python.
+### Analizador y compilador educativo para un subconjunto de C
 
-### Alcance del lenguaje soportado
-El análizador procesa un lenguaje tipo C con las siguientes caracteristicas:
+Implementado en Python con PLY. Explora análisis léxico y sintáctico, comprobaciones semánticas básicas y generación de código intermedio de tres direcciones.
 
-  - **Declaracion de variables**: Soporta la declaracion de variables de tipo `int` y `float`, permite declaraciones multiples en una misma linea (ej: `int a, b;`).
-  - **Asignacion**: Permite la asignacion de valores a variables declaradas.
-  - **Expresiones Aritmeticas**: Soporta operaciones de suma (`+`) y resta (`-`).
-  - **Ambitos Anidados**: Gestiona correctamente los ambitos locales definidos por llaves `{...}`, permitiendo el shadowing de variables (declaracion de una variable desde un ambito interno con el mismo nombre que una en un ambito externo).
+</div>
 
-## Arquitectura del Análizador
+---
 
-El proyecto está estructurado en tres módulos de Python interconectados que representan las fases clásicas de un compilador:
+## Descripción
 
-  1. `lexer.py` **(Análizador Léxico)**: Recibe el código fuente como una cadena de texto y lo descompone en una secuencia de unidades mínimas con significado, llamadas tokens.
-  2. `symbol_table.py` **(Tabla de Símbolos)**: Es el componente central del análisis semántico. Actúa como una base de datos que almacena información sobre los identificadores (variables) y gestiona su visibilidad según el ámbito.
-  3. `parser.py` **(Análizador Sintáctico y Semántico)**: Recibe la secuencia de tokens del lexer. Su doble función es:
-        - **Análisis Sintáctico**: Verificar que la secuencia de tokens siga las reglas gramaticales del lenguaje.
-        - **Análisis Semántico**: Realizar las validaciones de significado utilizando la Tabla de Símbolos.
+**Compiladores** es un proyecto académico que construye un compilador didáctico para un dialecto reducido inspirado en C. Su objetivo es mostrar cómo se conectan las etapas iniciales de un compilador: convertir texto fuente en tokens, reconocer su estructura, consultar una tabla de símbolos y generar una representación intermedia para ciertas expresiones.
 
-El flujo de trabajo es el siguiente: 
-#### `Código Fuente` -> `lexer.py` -> `Stream de Tokens` -> `parser.py` <-> `symbol_table.py` -> `Validación Semántica / Mensajes de Error`
+> **Alcance:** no es un compilador de C estándar ni está pensado para compilar programas de producción. Algunas construcciones están reconocidas por la gramática, pero su análisis semántico o su generación de código todavía son parciales.
 
-## Descripcion de Módulos
-### `lexer.py`
-Responsable de la tokenizacion. Define todos los componentes léxicos del lenguaje.
-   - `tokens`: Una tupla que enumera todos los posibles tokens (ej: `ID`, `INT_LITERAL`, `PLUS`).
-   - `reserved`: Un diccionario que mapea palabras clave del lenguaje (como int y float) a sus tipos de token correspondientes, àra diferenciarlas de los identificadores (`ID`).
-   - **Reglas (funciones `t_...`)**: Expresiones regulares y funciones que definen como reconocer cada token en el texto de entrada.
+## Características
 
-**Ejemplo de tokenización:**
-La linea de código `float pi = 3.14;` se convierte en la secuencia de tokens:
-`FLOAT`, `ID('pi')`, `ASSIGN`, `FLOAT_LITERAL(3.14)`, `SEMICOLON`
+La gramática y el lexer contemplan, entre otras, las siguientes construcciones:
 
-### `symbol_table.py`
-Sera la estructura de datos clave para la validación semántica.
-   - Estrucutra: Se implementó como una pila de diccionarios (`list[dict]`). Esta estructura es ideal para modelar los ámbitos anidados de C:
-        - El primer diccionario en la lista es el **ámbito global**.
-        - Cada vez que se entra en un bloque `{...}`, se añade un nuevo diccionario a la pila.
-        - Al salir de un bloque, se elimina el último diccionario de la pila.
-   - **Métodos Principales**
-     - `push_scope()`: Crea un nuevo ámbito (añade un diccionario a la pila).
-     - `pop_scope()`: Destruye el ámbito actual (elimina el último diccionario).
-     - `add(symbol)`: Añade un símbolo (variable y su tipo) al ámbito actual. Verifica que no haya re-declaraciones en el mismo ámbito.
-     - `lookup(name)`: Busca un símbolo empezando por el ámbito actual y continuando hacia los ámbitos externos (hacia el global). Esto simula correctamente la regla de resolución de nombres de C.
-       
-### `parser.py`
-Este módulo define la gramática del lenguaje y, lo más importante, integra las acciones semánticas.
-   - **Reglas Gramaticales (funciones `p_...`)**: Definen la sintaxis del lenguaje usando la notación Forma Backus-Naur (BNF) es una notación formal que define la sintaxis de los lenguajes de programación y otros lenguajes formales. Consta de metasímbolos como `'::='`, `'|'` y `'< >'`, y se usa comúnmente para describir gramáticas independientes del contexto.
-   - **Acciones Semánticas Integradas:**
-        - Gestión de Ámbitos:
-             - Se utiliza una producción vacía `scope_enter :` para ejecutar `symbol_table.push_scope()` justo después de que el parser lee una llave de apertura `{`.
-             - La regla `block` ejecuta `symbol_table.pop_scope()` después de que el bloque completo ha sido analizado.
-        -  Análisis de Declaraciones:
-             - En la regla `p_declaration`, se recorre la lista de identificadores declarados y se invoca a `symbol_table.add()` para registrarlos en el ámbito actual.
-        -  Validación de Variables y Tipos:
-             - En reglas que usan variables (como `p_assignment` o `p_factor_id`), se llama a `symbol_table.lookup()` para verificar que la variable haya sido declarada.
-             - Una vez obtenido el tipo de las variables, se realizan las comprobaciones de compatibilidad. Por ejemplo, en `p_assignment`, se verifica que el tipo de la expresión a la derecha sea compatible con el tipo de la variable a la izquierda.
+- Tipos `int`, `float`, `char`, `boolean` y `void`.
+- Identificadores, literales numéricos, caracteres y cadenas.
+- Declaraciones, asignaciones y bloques delimitados por llaves.
+- Operadores aritméticos, relacionales, lógicos, unarios e incremento/decremento.
+- Directivas sencillas `#include` y `#define`.
+- Definiciones y llamadas a funciones, parámetros y `return`.
+- Estructuras `if`/`else`, `while`, `for` y `switch`/`case`, además de `break`.
+- Comentarios de una línea (`//`) y multilínea (`/* ... */`).
+- Tabla de símbolos con ámbitos anidados y búsqueda desde el ámbito actual hacia los externos.
+- Generación de código intermedio de tres direcciones (3AC) para expresiones y asignaciones compatibles con el generador actual.
 
-## Módulo de Generacion de Código Intermedio (3AC)
-   1. La última fase implementada en el compilador es la generacion de Código de Tres Direcciones (Three-Address Code o 3AC). Esta es una representación intermedia del cídgo fuente que linealiza las estructuras    jerárquicas (árboles de expresiones) en una secuencia de instrucciones simples.
-      
-   El objetivo es transformar expresiones complejas como `x = a + b * c` en una serie de pasos atómicos que una maquina pueda procesar fácilmente.
-   2. Arquitectura del componente se desarrollo un móulo dedicado (`code_gen.py`) que trabaja en conjunto con el analizador sintáctico.
-      - Clase `CodeGenerator`: Actúa como un buffer de instrucciones.
-         - Gestión de Temporales (`new_temp`): Genera variables automáticas secuenciales (`t0`, `t1`, `t2`...) para almacenar resultados parciales de operaciones aritmémticas.
-         - Emision de Inatrucciones (`emit`): Almacena las operaciones en formato "cuádruplos":`operador, operando1, operando2, destino `.
-         
-   3. Estrategia de Traducci+on se utiliza un Traducción Dirigida por la Sintaxis. A medida qu el parser reduce las reglas gramaticales, se ejecutan las siguientes acciones:
-      1. Atributos Sintetizados: La variable `p[0]` de PLY ahora transporta un diccionario con dos metadatos:
-            - `type`: El tipo de dato (para validación semántica).
-            - `place`: El nombre de la variable o temporal donde reside el valor (para generación de código).
-      2. Descomposición de Expresiones:
-            - Al encontrar una operación (ej. suma), se solicitan los lugares (`place`) de los operandos izquierdo y derecho.
-            - Se genera un nuevo temporal (ej. `t5`).
-            - Se emite la instrucción `t5 = lugar_izq + lugar_der`.
+### Estado de implementación
 
-   4. Ejemplo de Transformación
-      Código fuente (Entrada)
-      ```
-       val = 10 + 20 * 3;
-       ```
-      Lógica del Generador:
-         1. Parser detecta `20 * 3`. Genera `t0`. Emite `t0 = 20 * 3`.
-         2. Parser detecta `10 + t0`. Genera `t1`. Emite `t1 = 10 + t0`.
-         3. Parser detecta asignacion a `val`. Emite `val = t1`
-      Código Intermedio Generado (Salida):
-       ```
-       t0 = 20 * 3
-       t1 = 10 + t0
-       val = t1
-       ```
+| Componente | Estado |
+| --- | --- |
+| Análisis léxico | Reconoce los tokens definidos en `lexer.py`; los caracteres ilegales se notifican en consola. |
+| Análisis sintáctico | Gramática educativa definida con PLY en `parser.py`. |
+| Análisis semántico | Parcial: tabla de símbolos, ámbitos y algunas comprobaciones de declaración y tipos. |
+| Código intermedio | Emite instrucciones 3AC para operaciones y asignaciones; no traduce el flujo de control a saltos. |
+| Compilación a código ejecutable | No implementada. |
 
-## Guía de Uso y Pruebas
-**Requisitos e Instalación**
- 1. Tener **Python 3.x** instalado.
- 2. Instalar libreria PLY a través de pip, preferiblemente en un entorno virtual:
-    ```
-    pip install ply
-    ```
+## Arquitectura
 
-**Ejecución del Analizador**
-El proyecto se ejecuta directamente desde el archivo `parser.py`, que contiene un bloque `if __name__ == '__main__':` con código de prueba.
-Para ejecutarlo, navegue a la carpeta del proyecto en una terminal y ejecute:
-   ```
-   python parser.py
-   ```
+```text
+Código fuente
+     │
+     ▼
+ lexer.py ──► secuencia de tokens
+                    │
+                    ▼
+              parser.py ◄────► symbol_table.py
+                    │           símbolos y ámbitos
+                    ▼
+               code_gen.py
+                    │
+                    ▼
+          instrucciones 3AC
+```
 
-**Código de Prueba y Salida Esperada**
-El script ejecuta dos pruebas automáticamente: una con código semánticamente correcto y otra diseñada para fallar.
+| Archivo | Responsabilidad |
+| --- | --- |
+| [`lexer.py`](lexer.py) | Define tokens, palabras reservadas y reglas léxicas con `ply.lex`. |
+| [`parser.py`](parser.py) | Define la gramática, coordina el análisis y contiene acciones semánticas. También incluye un programa de ejemplo ejecutable. |
+| [`symbol_table.py`](symbol_table.py) | Implementa símbolos, ámbitos anidados y errores semánticos. |
+| [`code_gen.py`](code_gen.py) | Almacena cuádruplos y los presenta en formato legible como código de tres direcciones. |
+| [`test_codigo_profesor.py`](test_codigo_profesor.py) | Ejecuta un ejemplo de análisis léxico y sintáctico con un programa de muestra. |
 
-   - **Prueba Exitosa**: El código de prueba demuestra la correcta gestión de variables globales, variables locales en ámbitos anidados y el shadowing. La salida esperada es una traza de cómo se crean y destruyen los ámbitos y se añaden los símbolos, terminando con el          mensaje "Análisis sintáctico y semántico completado exitosamente."
-   - **Prueba con Error**:  El segundo bloque de código intenta usar una variable fuera del ámbito donde fue declarada.
+## Requisitos
 
-     El analizador debe detectar este error y mostrar el siguiente mensaje en la consola:
-           	```
-             Error  Semántico: La variable 'b' no ha sido declarada.
-            ```
-     Esto demuestra que el analizador semántico es capaz de identificar errores de ámbito correctamente.
+- Python 3.
+- [PLY](https://www.dabeaz.com/ply/), la biblioteca Python Lex-Yacc.
 
+## Instalación
 
+Clona el repositorio y entra en su directorio:
 
-## Conclusiones y Posibles Mejoras
+```bash
+git clone https://github.com/Johngardev/Compiladores.git
+cd Compiladores
+```
 
-**Conclusión**
-Se ha desarrollado con éxito un analizador semántico funcional para un subconjunto del lenguaje C. El sistema valida eficazmente las declaraciones de variables, la compatibilidad de tipos en asignaciones y la correcta utilización de ámbitos, sentando una base sólida para las fases posteriores de un compilador, como la generación de código intermedio.
+Se recomienda utilizar un entorno virtual:
 
-**Trabajo Futuro**
-El proyecto puede ser extendido para incluir características más avanzadas del lenguaje C:
-   - Soporte para más tipos de datos (`char`, `void`).
-   - Implementación de declaraciones y llamadas a **funciones**, incluyendo la validación de parámetros.
-   - Análisis semántico para estructuras de control (`if-else`, `while`, `for`).
-   - Soporte para **arreglos** y **punteros**.
-   
+```bash
+python -m venv .venv
+```
+
+Actívalo según tu sistema:
+
+```bash
+# Linux / macOS
+source .venv/bin/activate
+
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+```
+
+Instala la dependencia:
+
+```bash
+python -m pip install ply
+```
+
+## Uso
+
+Ejecuta el ejemplo incluido en el parser:
+
+```bash
+python parser.py
+```
+
+El programa muestra el código fuente de ejemplo, ejecuta el análisis y presenta las instrucciones intermedias generadas.
+
+También puedes ejecutar el ejemplo de prueba:
+
+```bash
+python test_codigo_profesor.py
+```
+
+Este script imprime los tokens reconocidos y ejecuta el parser sobre un programa de muestra. La salida puede incluir avisos o errores semánticos: el ejemplo contiene casos de redeclaración e incompatibilidad de tipos intencionales, y el analizador todavía no convierte todos los errores en un resultado de compilación fallido.
+
+## Ejemplo de código intermedio
+
+Para una expresión como:
+
+```c
+c = a + b * 2;
+```
+
+el generador representa primero la operación de mayor precedencia y después la suma:
+
+```text
+t0 = b * 2
+t1 = a + t0
+c = t1
+```
+
+Los temporales (`t0`, `t1`, ...) permiten descomponer expresiones en instrucciones sencillas. La salida es una representación intermedia; no es código máquina ni un ejecutable.
+
+## Limitaciones conocidas
+
+Este proyecto es un trabajo en evolución. Entre las limitaciones actuales se encuentran:
+
+- La cobertura semántica es incompleta: no todas las construcciones gramaticales tienen validación de tipos o de contexto.
+- La generación 3AC no implementa etiquetas ni saltos para `if`, bucles o `switch`.
+- No se genera ensamblador ni código ejecutable.
+- La gramática no pretende cubrir el estándar C; arrays, estructuras y muchas otras características no están implementados de forma completa.
+- Los inicializadores, parámetros, funciones y punteros no deben considerarse plenamente validados solo porque algunas formas aparecen en la gramática.
+- No hay actualmente una suite automatizada de pruebas con un framework de testing.
+
+## Posibles mejoras
+
+- Separar la interfaz de ejecución del parser y aceptar archivos fuente desde la línea de comandos.
+- Centralizar errores léxicos, sintácticos y semánticos con número de línea y contexto.
+- Completar la validación de tipos, declaraciones, funciones y ámbitos.
+- Implementar generación de flujo de control en 3AC mediante etiquetas y saltos.
+- Añadir pruebas automatizadas para casos válidos, errores y regresiones.
+- Documentar formalmente la gramática del subconjunto soportado.
+
+## Tecnologías
+
+- **Python** — implementación.
+- **PLY (Python Lex-Yacc)** — análisis léxico y sintáctico.
+
+## Contribuciones
+
+Las mejoras y correcciones son bienvenidas. Para proponer cambios, abre un *issue* con el contexto del problema o envía un *pull request* con una descripción clara y pruebas o ejemplos cuando corresponda.
+
+## Licencia
+
+No se especifica una licencia en este repositorio. Antes de reutilizar, modificar o distribuir el código, consulta con el autor o añade una licencia apropiada.
